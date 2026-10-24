@@ -233,9 +233,9 @@ function viewTreino(n){
   h += '<p class="status">'+feitos+' de '+total+' registrados · '+esc(S.data)+'</p></div>';
 
   h += '<div class="card"><div class="hd"><h2>Ditar a sessão</h2></div>'+
-    '<p class="lead">Toque no campo e use o microfone do teclado. Fale os códigos e as notas: <em>'+b.n+' ponto 1 oito vírgula três, '+b.n+' ponto 2 oito</em>.</p>'+
+    '<p class="lead">'+((!!(window.SpeechRecognition||window.webkitSpeechRecognition)&&location.protocol==="https:")?'Toque em <strong>Falar</strong> e dite direto. ':'Toque no campo e use o microfone do teclado. ')+'Fale os códigos e as notas: <em>'+b.n+' ponto 1 oito vírgula três, '+b.n+' ponto 2 oito</em>.</p>'+
     '<textarea id="dit" rows="3" placeholder="'+b.n+'.1 8,3 '+b.n+'.2 8 '+b.n+'.3 8,5"></textarea>'+
-    '<div class="act" style="margin-top:10px"><button type="button" id="ditGo" class="primary">Interpretar</button>'+
+    '<div class="act" style="margin-top:10px">'+((!!(window.SpeechRecognition||window.webkitSpeechRecognition)&&location.protocol==="https:")?'<button type="button" id="mic" class="mic">Falar</button>':'')+'<button type="button" id="ditGo" class="primary">Interpretar</button>'+
     '<button type="button" id="ditClr">Limpar campo</button></div><p class="status" id="ditSt"></p></div>';
   return h;
 }

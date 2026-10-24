@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16150f">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Treino Peterson</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Instrumento de bancada: lista densa, números em mono, estado por cor semântica */
+:root{
+  --bg:#f6f4ef; --surface:#fffdf9; --surface2:#efece4; --line:#ddd8cc;
+  --fg:#23211c; --fg2:#5d574b; --fg3:#8b8476;
+  --accent:#8a6a2f; --accent-soft:#e8dcc2;
+  --under:#2f6f63; --target:#8a6a2f; --over:#b5631f; --alert:#a32d22;
+  --z1:#6b7f93; --z2:#2f6f63; --z3:#5c8a3a; --z4:#b5631f; --z5:#a32d22;
+  --f-disp:"IBM Plex Sans Condensed",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,monospace;
+  --r:6px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#16150f; --surface:#1f1d16; --surface2:#2a2720; --line:#39352b;
+  --fg:#f0ece1; --fg2:#b3ac9b; --fg3:#7d7769;
+  --accent:#c9a461; --accent-soft:#3a3122;
+  --under:#5fae9c; --target:#c9a461; --over:#e0923f; --alert:#e2685a;
+  --z1:#8fa3b8; --z2:#5fae9c; --z3:#86b85e; --z4:#e0923f; --z5:#e2685a;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#16150f; --surface:#1f1d16; --surface2:#2a2720; --line:#39352b;
+  --fg:#f0ece1; --fg2:#b3ac9b; --fg3:#7d7769;
+  --accent:#c9a461; --accent-soft:#3a3122;
+  --under:#5fae9c; --target:#c9a461; --over:#e0923f; --alert:#e2685a;
+  --z1:#8fa3b8; --z2:#5fae9c; --z3:#86b85e; --z4:#e0923f; --z5:#e2685a;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 48px;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:720px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-disp);text-wrap:balance;margin:0;letter-spacing:-.01em}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:var(--r)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px}
+textarea{width:100%;min-width:0;resize:vertical;font-family:var(--f-body)}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--bg);
+  border-bottom:1px solid var(--line);padding-block:12px 10px;margin-bottom:14px}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.brand h1{font-size:19px;font-weight:700}
+.brand .sub{color:var(--fg3);font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-family:var(--f-disp)}
+nav.tabs{display:flex;gap:6px;margin-top:10px;overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{padding:7px 12px;font-size:13px;white-space:nowrap;font-family:var(--f-disp);font-weight:600;letter-spacing:.02em}
+nav.tabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.hd{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:3px}
+.hd h2{font-size:17px;font-weight:700}
+.hd .tag{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--fg3);font-family:var(--f-disp)}
+.lead{color:var(--fg2);font-size:13.5px;margin:0 0 12px}
+
+ul.ex{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+li.row{background:var(--surface);padding:11px 12px;display:grid;grid-template-columns:42px 1fr auto;gap:10px;align-items:center;min-width:0}
+li.row[data-cod]{cursor:pointer}
+li.row[data-cod]:hover{background:var(--surface2)}
+li.row.off{opacity:.45}
+.code{font-family:var(--f-num);font-size:13px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.meta{min-width:0}
+.meta .nm{display:block;font-weight:500;font-size:14.5px;line-height:1.3}
+.meta .ld{display:block;color:var(--fg2);font-size:12px;margin-top:3px;font-family:var(--f-num);font-variant-numeric:tabular-nums;line-height:1.35}
+.meta .ld b{color:var(--fg);font-weight:600}
+.right{display:flex;align-items:center;gap:9px}
+@media (max-width:430px){.spark{display:none}}
+.spark{display:block}
+.note{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:600;font-size:15px;
+  min-width:46px;padding:7px 8px;text-align:center;border-radius:var(--r);border:1px solid var(--line);background:var(--surface2)}
+.note.set{color:var(--bg)}
+.note.u{background:var(--under);border-color:var(--under)}
+.note.t{background:var(--target);border-color:var(--target)}
+.note.o{background:var(--over);border-color:var(--over)}
+.note.a{background:var(--alert);border-color:var(--alert)}
+.note.skip{background:var(--surface2);color:var(--fg3);border-style:dashed}
+
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);
+  padding:0;max-width:420px;width:calc(100% - 32px)}
+dialog::backdrop{background:rgba(0,0,0,.55)}
+.dlg{padding:16px}
+.dlg h3{font-size:16px;margin-bottom:2px}
+.dlg .ctx{color:var(--fg2);font-size:13px;margin-bottom:14px}
+.stepper{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:12px}
+.stepper button{width:54px;height:54px;font-size:26px;font-family:var(--f-num);line-height:1}
+.big{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:40px;font-weight:600;min-width:92px;text-align:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;justify-content:center}
+.chips button{padding:7px 11px;font-family:var(--f-num);font-size:13.5px}
+.chips button.on{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.dlgact{display:flex;gap:8px;flex-wrap:wrap}
+.dlgact button{flex:1 1 120px;padding:11px;font-family:var(--f-disp);font-weight:600;font-size:14px}
+.primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.hint{color:var(--fg3);font-size:12px;margin:10px 0 0}
+
+.bar{display:flex;height:9px;border-radius:5px;overflow:hidden;background:var(--surface2);margin:8px 0 6px}
+.bar i{display:block}
+.zleg{display:flex;flex-wrap:wrap;gap:4px 12px;font-family:var(--f-num);font-size:11.5px;color:var(--fg2);
+  font-variant-numeric:tabular-nums;margin:0;padding:0;list-style:none}
+.zleg li{display:flex;align-items:center;gap:5px}
+.zleg b{width:8px;height:8px;border-radius:2px;display:block}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.kpi{background:var(--surface);padding:9px 10px}
+.kpi span{display:block;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3);font-family:var(--f-disp)}
+.kpi strong{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:19px;font-weight:600;line-height:1.3}
+.drop{border:1.5px dashed var(--line);border-radius:var(--r);padding:20px 14px;text-align:center;color:var(--fg2);font-size:13.5px}
+.drop.hot{border-color:var(--accent);background:var(--accent-soft)}
+
+.pend{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.pend li{display:grid;grid-template-columns:3px 1fr;gap:10px;background:var(--surface2);border-radius:var(--r);overflow:hidden}
+.pend li>i{display:block}
+.pend .alta>i{background:var(--alert)}.pend .media>i{background:var(--over)}.pend .baixa>i{background:var(--z2)}
+.pend .txt{padding:9px 10px 9px 0;min-width:0}
+.pend .t{font-weight:600;font-size:14px}
+.pend .d{color:var(--fg2);font-size:13px;margin-top:1px}
+
+table.core{width:100%;border-collapse:collapse;font-size:13.5px}
+table.core th{text-align:left;font-family:var(--f-disp);font-size:11px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--fg3);font-weight:600;padding:0 10px 6px 0;border-bottom:1px solid var(--line)}
+table.core td{padding:8px 10px 8px 0;border-bottom:1px solid var(--line);vertical-align:top}
+table.core td:first-child{font-weight:500}
+table.core td:last-child{font-family:var(--f-num);color:var(--fg2);white-space:nowrap}
+
+pre.out{background:var(--surface2);border:1px solid var(--line);border-radius:var(--r);padding:12px;
+  font-family:var(--f-num);font-size:12.5px;white-space:pre-wrap;word-break:break-word;margin:0 0 10px;max-height:300px;overflow:auto}
+.act{display:flex;gap:8px;flex-wrap:wrap}
+.act button{padding:10px 14px;font-family:var(--f-disp);font-weight:600;font-size:14px}
+button.mic{background:var(--surface2)}
+button.mic.on{background:var(--alert);border-color:var(--alert);color:var(--bg)}
+button.mic::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;margin-right:7px;vertical-align:1px}
+button.mic.on::before{animation:pulso 1.1s ease-in-out infinite}
+@keyframes pulso{0%,100%{opacity:1}50%{opacity:.25}}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));
+  background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:20px;font-size:13.5px;font-weight:500;z-index:50}
+.status{font-size:12px;color:var(--fg3);margin-top:8px;font-family:var(--f-num)}
+.obs{color:var(--fg2);font-size:12.5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);display:none}
+.obs.open{display:block}
+details.raw summary{cursor:pointer;color:var(--fg2);font-size:12.5px;font-family:var(--f-disp);font-weight:600}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand"><h1>Treino Peterson</h1><span class="sub" id="hdsub">6 treinos · nota alvo 8</span></div>
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+</header>
+<main id="view"></main>
+</div>
+
+<dialog id="dlg"><form method="dialog" class="dlg">
+  <h3 id="dTit">Exercício</h3>
+  <p class="ctx" id="dCtx"></p>
+  <div class="stepper">
+    <button type="button" id="dMinus" aria-label="Diminuir 0,1">−</button>
+    <div class="big num" id="dVal">8.0</div>
+    <button type="button" id="dPlus" aria-label="Aumentar 0,1">+</button>
+  </div>
+  <div class="chips" id="dChips"></div>
+  <label for="dObs" class="sub" style="font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3);font-family:var(--f-disp)">Exceção (carga, volume, troca)</label>
+  <input id="dObs" style="width:100%;margin:4px 0 12px" placeholder="ex: 45kg · 3x12 · sentado 9kg">
+  <div class="dlgact">
+    <button type="button" id="dSkip">Não fiz</button>
+    <button type="button" id="dClear">Limpar</button>
+    <button type="button" id="dOk" class="primary">Salvar</button>
+  </div>
+</form></dialog>
+
+<script>
+const D = {"prog": [{"n": 1, "nome": "Superior A", "sub": "Peito, ombro e tríceps", "dia": "segunda", "itens": [{"cod": "1.1", "nome": "Supino reto na barra", "series": "4 x 8", "carga": "75 kg · 27,5 cada lado", "off": false, "hist": [["10/08", 8.4], ["18/08", 8.0], ["31/08", 8.0], ["21/09", 9.0], ["29/09", 8.3]]}, {"cod": "1.2", "nome": "Supino inclinado halteres", "series": "3 x 8", "carga": "28 kg cada", "off": false, "hist": [["10/08", 8.5], ["18/08", 8.0], ["31/08", 8.8], ["21/09", 8.2], ["29/09", 8.3]]}, {"cod": "1.3", "nome": "Desenvolvimento militar halteres", "series": "3 x 8-10", "carga": "36 kg · 18 cada · sentado", "off": false, "hist": [["10/08", 8.4], ["18/08", 8.0], ["31/08", 8.8], ["21/09", 8.0], ["29/09", 8.2]]}, {"cod": "1.4", "nome": "Elevação lateral", "series": "3 x 12-15", "carga": "polia 6,875 kg ou sentado 9 kg", "off": false, "hist": [["21/09", 8.0], ["29/09", 8.3]]}, {"cod": "1.5", "nome": "Tríceps na corda", "series": "3 x 12", "carga": "16,25 kg", "off": false, "hist": [["10/08", 8.3], ["18/08", 8.0], ["31/08", 8.4], ["21/09", 8.0], ["29/09", 8.3]]}, {"cod": "1.6", "nome": "Tríceps francês", "series": "3 x 8-10", "carga": "24 kg", "off": false, "hist": [["10/08", 8.0], ["18/08", 8.3], ["31/08", 8.3], ["21/09", 8.0], ["29/09", 8.3]]}, {"cod": "1.7", "nome": "Core: prancha + Pallof press", "series": "3 + 3 series", "carga": "prancha 40-60 s · Pallof 10/lado, 10 kg", "off": false, "hist": []}]}, {"n": 2, "nome": "Inferior A", "sub": "Quadríceps e posterior", "dia": "terça", "itens": [{"cod": "2.1", "nome": "Agachamento livre na barra", "series": "4 x 6-8", "carga": "75 kg · limitar profundidade", "off": false, "hist": [["11/08", 8.0], ["19/08", 8.2], ["26/08", 8.0], ["23/09", 8.0]]}, {"cod": "2.2", "nome": "Pressão de pernas 45°", "series": "3 x 10-12", "carga": "170 kg · limitar profundidade", "off": false, "hist": [["11/08", 8.5], ["19/08", 8.5], ["26/08", 8.0], ["23/09", 8.0]]}, {"cod": "2.3", "nome": "Cadeira extensora", "series": "3 x 12-15", "carga": "80 kg", "off": false, "hist": [["11/08", 8.0], ["19/08", 8.3], ["26/08", 8.2], ["23/09", 8.0]]}, {"cod": "2.4", "nome": "Stiff halteres", "series": "-", "carga": "removido 23/10", "off": true, "hist": []}, {"cod": "2.5", "nome": "Mesa flexora", "series": "3 x 10-12", "carga": "50 kg", "off": false, "hist": [["11/08", 8.0], ["19/08", 8.3], ["26/08", 8.0], ["23/09", 8.4]]}, {"cod": "2.6", "nome": "Panturrilha em pé", "series": "4 x 15-20", "carga": "50 kg no Smith · provisório", "off": false, "hist": [["11/08", 9.0], ["19/08", 8.7], ["26/08", 7.0], ["23/09", 8.5]]}, {"cod": "2.7", "nome": "Core: prancha lateral + dead bug", "series": "3 + 3 series", "carga": "lateral 30-40 s/lado · dead bug 8-10/lado", "off": false, "hist": []}]}, {"n": 3, "nome": "Quarta", "sub": "HIIT e core", "dia": "quarta", "itens": [{"cod": "3.1", "nome": "Aquecimento esteira", "series": "8 min", "carga": "5-6 km/h · incl 3%", "off": false, "hist": []}, {"cod": "3.2", "nome": "4 intervalos com alarme", "series": "4 x 4 min", "carga": "7,5-8 km/h · incl 9% · teto FC 160", "off": false, "hist": []}, {"cod": "3.3", "nome": "Recuperações", "series": "4 x 4 min", "carga": "4 km/h · incl 1%", "off": false, "hist": []}, {"cod": "3.4", "nome": "Desaquecimento", "series": "5 min", "carga": "4-3 km/h", "off": false, "hist": []}, {"cod": "3.5", "nome": "Core: bird dog + pranchas", "series": "", "carga": "bird dog 45 s/lado · prancha 40-60 s", "off": false, "hist": []}]}, {"n": 4, "nome": "Superior B", "sub": "Costas, deltoide posterior e bíceps", "dia": "quinta", "itens": [{"cod": "4.1", "nome": "Voador invertido", "series": "3 x 12-15", "carga": "35 kg", "off": false, "hist": [["30/07", 8.2], ["06/08", 8.0], ["13/08", 8.0], ["27/08", 8.0], ["18/09", 7.5], ["24/09", 8.5], ["30/09", 8.0]]}, {"cod": "4.2", "nome": "Face pull com corda", "series": "3 x 12-15", "carga": "21,5 kg", "off": false, "hist": [["30/07", 8.0], ["06/08", 8.0], ["13/08", 8.0], ["27/08", 8.0], ["18/09", 8.0], ["24/09", 8.0], ["30/09", 8.0]]}, {"cod": "4.3", "nome": "Barra fixa pronada", "series": "4 x 6-10", "carga": "peso corporal", "off": false, "hist": [["30/07", 8.0], ["06/08", 9.0], ["13/08", 8.8], ["27/08", 8.0], ["18/09", 8.5], ["24/09", 8.0], ["30/09", 8.0]]}, {"cod": "4.4", "nome": "Remada máquina", "series": "4 x 8-10", "carga": "42,5 kg cada lado", "off": false, "hist": [["30/07", 8.5], ["06/08", 7.8], ["13/08", 8.3], ["27/08", 8.0], ["18/09", 8.5], ["24/09", 8.0], ["30/09", 8.0]]}, {"cod": "4.5", "nome": "Puxada na polia frente", "series": "3 x 10-12", "carga": "63,5 kg", "off": false, "hist": [["13/08", 8.3], ["27/08", 8.5], ["18/09", 8.2], ["24/09", 8.5], ["30/09", 8.0]]}, {"cod": "4.6", "nome": "Remada unilateral com halter", "series": "3 x 10-12", "carga": "32 kg · apoio no banco", "off": false, "hist": [["13/08", 8.4], ["27/08", 8.0], ["18/09", 8.2], ["24/09", 8.4], ["30/09", 8.0]]}, {"cod": "4.7", "nome": "Rosca alternada com halteres", "series": "3 x 10", "carga": "14 kg cada", "off": false, "hist": [["06/08", 8.8], ["13/08", 8.0], ["27/08", 8.0], ["18/09", 8.3], ["24/09", 8.0], ["30/09", 7.9]]}, {"cod": "4.8", "nome": "Core: prancha lateral + bird dog", "series": "3 + 3 series", "carga": "lateral 30-40 s/lado · bird dog 8-10/lado", "off": false, "hist": []}]}, {"n": 5, "nome": "Inferior B", "sub": "Posterior e glúteo", "dia": "sexta", "itens": [{"cod": "5.1", "nome": "Hinge de quadril", "series": "-", "carga": "suspenso 23/10", "off": true, "hist": []}, {"cod": "5.2", "nome": "Coice máquina (glúteo)", "series": "3 x 12", "carga": "52,5 kg", "off": false, "hist": [["08/08", 8.0], ["14/08", 8.0], ["25/09", 8.0]]}, {"cod": "5.3", "nome": "Agachamento búlgaro halteres", "series": "3 x 8-10", "carga": "16 kg cada", "off": false, "hist": [["08/08", 8.3], ["14/08", 8.0], ["25/09", 8.3]]}, {"cod": "5.4", "nome": "Cadeira flexora", "series": "3 x 10-12", "carga": "55 kg · reduzir de 65", "off": false, "hist": [["08/08", 9.5], ["14/08", 10.0]]}, {"cod": "5.5", "nome": "Passada com halteres", "series": "3 x 10-12", "carga": "12 kg cada", "off": false, "hist": [["08/08", 8.0], ["14/08", 8.0]]}, {"cod": "5.6", "nome": "Panturrilha sentado", "series": "3 x 15-20", "carga": "52 kg", "off": false, "hist": [["14/08", 8.0]]}, {"cod": "5.7", "nome": "Core: prancha + Pallof press", "series": "3 + 3 series", "carga": "prancha 40-60 s · Pallof 10/lado", "off": false, "hist": []}]}, {"n": 6, "nome": "Superior C", "sub": "Peito e bíceps detalhados", "dia": "sábado", "itens": [{"cod": "6.1", "nome": "Supino declinado na máquina", "series": "3 x 8-10", "carga": "32,5 kg", "off": false, "hist": [["07/08", 8.3], ["15/08", 8.0], ["05/09", 8.3], ["25/09", 8.3]]}, {"cod": "6.2", "nome": "Crucifixo halteres banco reto", "series": "3 x 12", "carga": "14 kg", "off": false, "hist": [["07/08", 8.0], ["15/08", 8.3], ["05/09", 8.0], ["25/09", 8.3]]}, {"cod": "6.3", "nome": "Cruzamento de polia", "series": "3 x 12-15", "carga": "16,25 kg · cada lado", "off": false, "hist": [["07/08", 8.0], ["15/08", 8.4], ["05/09", 8.0], ["25/09", 8.3]]}, {"cod": "6.4", "nome": "Cruzamento de polia baixo", "series": "3 x 8 (sugerido: 3 x 12-15)", "carga": "6,25 kg", "off": false, "hist": [["05/09", 8.0], ["25/09", 8.6]]}, {"cod": "6.5", "nome": "Elevação lateral sentado", "series": "3 x 12", "carga": "9 kg", "off": false, "hist": [["15/08", 8.8], ["05/09", 8.0]]}, {"cod": "6.6", "nome": "Rosca direta método 21", "series": "3 series", "carga": "17,5 kg", "off": false, "hist": [["07/08", 8.5], ["15/08", 8.5], ["05/09", 8.7]]}, {"cod": "6.7", "nome": "Rosca concentrada halter", "series": "3 x 10", "carga": "12 kg", "off": false, "hist": [["07/08", 8.0], ["15/08", 8.0], ["05/09", 7.8]]}, {"cod": "6.8", "nome": "Rosca martelo sentado", "series": "3 x 12", "carga": "12 kg", "off": false, "hist": [["07/08", 8.5], ["15/08", 8.5], ["05/09", 8.2]]}, {"cod": "6.9", "nome": "Mobilidade", "series": "10 min", "carga": "ombros e quadril · 10 min", "off": false, "hist": []}]}], "pend": [["Avaliação de coluna", "Ressonância de 2015 mais sintoma atual. Ortopedista de coluna ou fisiatra, e fisioterapeuta.", "alta"], ["Joelho esquerdo", "Alerta aberto desde 23/07, sem avaliação confirmada.", "alta"], ["5.4 cadeira flexora", "Nota 10 a 65 kg em 14/08. Baixar para 55 kg. Sem dado novo há 10 semanas.", "alta"], ["5.2 coice máquina", "Liberado para 55 kg desde 25/09 e não executado. É a principal extensão de quadril do programa agora.", "media"], ["1.1 supino reto", "Teste da barra vazia antes das séries, para separar limitação de carga de mobilidade.", "media"], ["1.4 elevação lateral", "Decidir entre polia aqui e sentado no 6.5, para não duplicar.", "media"], ["2.6 panturrilha", "50 kg no Smith é provisório. Repetir 4x15 e confirmar.", "media"], ["4.1 / 4.2 / 4.3 / 4.4", "Quatro consolidados em 30/09. Candidatos: 37,5 kg · 23 kg · carga ou 4x10 · 45 kg.", "baixa"], ["4.7 rosca alternada", "Nota 7,9 em 30/09, primeira abaixo de 8. Testar 16 kg.", "baixa"]], "core": [["Prancha frontal", "Anti-extensão", "40 a 60 s"], ["Prancha lateral", "Anti-flexão lateral", "30 a 40 s cada lado"], ["Bird dog (perdigueiro)", "Anti-rotação e anti-extensão", "8 a 10 reps cada lado"], ["Pallof press na polia", "Anti-rotação com carga", "10 reps cada lado, começar em 10 kg"], ["Dead bug", "Anti-extensão", "8 a 10 reps cada lado"]], "fcmax": 177, "zonas": [["Z1", 89, 106], ["Z2", 106, 124], ["Z3", 124, 142], ["Z4", 142, 159], ["Z5", 159, 230]]};
+const LS = "tp.rascunho.v1";
+const hoje = () => { const d=new Date(); return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0"); };
+
+let S = { treino: null, data: hoje(), itens: {}, tcx: null };
+try { const raw = localStorage.getItem(LS); if (raw) { const p = JSON.parse(raw); if (p && p.data === hoje()) S = Object.assign(S, p); } } catch (e) {}
+const save = () => { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} };
+
+const cls = n => n == null ? "" : n < 8 ? "u" : n < 8.5 ? "t" : n < 9 ? "o" : "a";
+const fmt = n => n == null ? "" : (Math.round(n*10)/10).toFixed(1).replace(".", ",");
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const bloco = n => D.prog.find(b => b.n === n);
+const item = cod => { for (const b of D.prog) for (const i of b.itens) if (i.cod === cod) return i; return null; };
+
+function sparkline(h, atual){
+  const pts = h.map(x => x[1]).concat(atual != null ? [atual] : []);
+  if (pts.length < 2) return '<span class="spark" style="width:58px"></span>';
+  const W=58,H=20,mn=7,mx=10,x=i=>i*(W-3)/(pts.length-1)+1.5,y=v=>H-2-((Math.min(mx,Math.max(mn,v))-mn)/(mx-mn))*(H-4);
+  let d=""; pts.forEach((v,i)=> d += (i?"L":"M")+x(i).toFixed(1)+" "+y(v).toFixed(1)+" ");
+  const last=pts[pts.length-1], c="var(--"+({u:"under",t:"target",o:"over",a:"alert"}[cls(last)])+")";
+  return '<svg class="spark" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true">'+
+    '<line x1="0" y1="'+y(8).toFixed(1)+'" x2="'+W+'" y2="'+y(8).toFixed(1)+'" stroke="var(--line)" stroke-width="1"/>'+
+    '<path d="'+d.trim()+'" fill="none" stroke="'+c+'" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'+
+    '<circle cx="'+x(pts.length-1).toFixed(1)+'" cy="'+y(last).toFixed(1)+'" r="2.4" fill="'+c+'"/></svg>';
+}
+
+function viewTreino(n){
+  const b = bloco(n);
+  if (S.treino !== n) { S.treino = n; S.itens = S.itens || {}; save(); }
+  let h = '<div class="card"><div class="hd"><h2>'+esc(b.nome)+'</h2><span class="tag">'+esc(b.dia)+' · treino '+b.n+'</span></div>'+
+          '<p class="lead">'+esc(b.sub)+'. Toque num exercício para dar a nota.</p><ul class="ex">';
+  for (const it of b.itens){
+    const v = S.itens[it.cod];
+    const nota = v && v.nota != null ? v.nota : null;
+    const pulou = v && v.skip;
+    let badge = pulou ? '<span class="note skip">—</span>'
+      : nota != null ? '<span class="note set '+cls(nota)+'">'+fmt(nota)+'</span>'
+      : '<span class="note">·</span>';
+    const carga = it.carga||"";
+    h += '<li class="row'+(it.off?" off":"")+'"'+(it.off?"":' data-cod="'+it.cod+'" role="button" tabindex="0"')+'>'+
+      '<span class="code">'+esc(it.cod)+'</span>'+
+      '<span class="meta"><span class="nm">'+esc(it.nome)+'</span>'+
+      '<span class="ld">'+(it.series?esc(it.series)+' · ':'')+'<b>'+esc(carga)+'</b>'+
+      (v&&v.obs?' · '+esc(v.obs):'')+'</span></span>'+
+      '<span class="right">'+(it.off?'':sparkline(it.hist||[], nota))+badge+'</span></li>';
+  }
+  h += '</ul>';
+  const feitos = b.itens.filter(i=>!i.off && S.itens[i.cod] && (S.itens[i.cod].nota!=null||S.itens[i.cod].skip)).length;
+  const total = b.itens.filter(i=>!i.off).length;
+  h += '<p class="status">'+feitos+' de '+total+' registrados · '+esc(S.data)+'</p></div>';
+
+  h += '<div class="card"><div class="hd"><h2>Ditar a sessão</h2></div>'+
+    '<p class="lead">Toque no campo e use o microfone do teclado. Fale os códigos e as notas: <em>'+b.n+' ponto 1 oito vírgula três, '+b.n+' ponto 2 oito</em>.</p>'+
+    '<textarea id="dit" rows="3" placeholder="'+b.n+'.1 8,3 '+b.n+'.2 8 '+b.n+'.3 8,5"></textarea>'+
+    '<div class="act" style="margin-top:10px"><button type="button" id="ditGo" class="primary">Interpretar</button>'+
+    '<button type="button" id="ditClr">Limpar campo</button></div><p class="status" id="ditSt"></p></div>';
+  return h;
+}
+
+function viewRelogio(){
+  let h = '<div class="card"><div class="hd"><h2>Dados do relógio</h2><span class="tag">TCX</span></div>'+
+    '<p class="lead">Carregue o arquivo .tcx da sessão. As zonas usam FCmáx '+D.fcmax+'.</p>'+
+    '<div class="drop" id="drop"><strong>Escolher arquivo .tcx</strong><br>ou arraste aqui<input type="file" id="tcx" accept=".tcx,text/xml,application/xml" style="position:absolute;opacity:0;width:0;height:0"></div>'+
+    '<div id="tcxOut" style="margin-top:12px"></div></div>';
+  return h;
+}
+
+function renderTcx(t){
+  if(!t) return "";
+  const zc = ["--z1","--z2","--z3","--z4","--z5"];
+  let bar = '<div class="bar">';
+  t.z.forEach((p,i)=>{ if(p>0) bar += '<i style="width:'+p.toFixed(2)+'%;background:var('+zc[i]+')"></i>'; });
+  bar += '</div><ul class="zleg">';
+  t.z.forEach((p,i)=>{ bar += '<li><b style="background:var('+zc[i]+')"></b>'+D.zonas[i][0]+' '+p.toFixed(1)+'%</li>'; });
+  bar += '</ul>';
+  return '<div class="kpis">'+
+    '<div class="kpi"><span>Duração</span><strong>'+t.min.toFixed(0)+'<small style="font-size:12px"> min</small></strong></div>'+
+    '<div class="kpi"><span>FC média</span><strong>'+t.med+'</strong></div>'+
+    '<div class="kpi"><span>FC máx</span><strong>'+t.max+'</strong></div>'+
+    '<div class="kpi"><span>FC mín</span><strong>'+t.min_+'</strong></div>'+
+    '<div class="kpi"><span>Z4+Z5</span><strong>'+(t.z[3]+t.z[4]).toFixed(1)+'<small style="font-size:12px">%</small></strong></div>'+
+    (t.kcal?'<div class="kpi"><span>Calorias</span><strong>'+t.kcal+'</strong></div>':'')+
+    '</div>'+bar+
+    '<p class="status">1ª metade FC '+t.h1+' · 2ª metade FC '+t.h2+' · '+t.n+' pontos</p>';
+}
+
+function parseTcx(txt){
+  const doc = new DOMParser().parseFromString(txt, "application/xml");
+  if (doc.querySelector("parsererror")) return null;
+  const tps = Array.from(doc.getElementsByTagName("Trackpoint"));
+  const hrs = [], ts = [];
+  for (const tp of tps){
+    const hv = tp.getElementsByTagName("HeartRateBpm")[0];
+    const tv = tp.getElementsByTagName("Time")[0];
+    if (hv){ const v = parseInt((hv.textContent||"").replace(/\D/g,""),10); if (v>0){ hrs.push(v); ts.push(tv?Date.parse(tv.textContent):null); } }
+  }
+  if (!hrs.length) return null;
+  const z = D.zonas.map(([,lo,hi]) => 100*hrs.filter(v=>v>=lo&&v<hi).length/hrs.length);
+  const t0 = ts.find(x=>x), t1 = [...ts].reverse().find(x=>x);
+  const mid = Math.floor(hrs.length/2);
+  const avg = a => a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):0;
+  let kcal = 0; for (const c of doc.getElementsByTagName("Calories")) kcal += parseInt(c.textContent,10)||0;
+  return { n:hrs.length, med:avg(hrs), max:Math.max(...hrs), min_:Math.min(...hrs),
+    min:(t0&&t1)?(t1-t0)/60000:hrs.length/60, z, h1:avg(hrs.slice(0,mid)), h2:avg(hrs.slice(mid)), kcal:kcal||null };
+}
+
+const PAL = {zero:0,um:1,uma:1,dois:2,duas:2,tres:3,"três":3,quatro:4,cinco:5,seis:6,sete:7,oito:8,nove:9,dez:10,meio:5,meia:5};
+function interpreta(txt, bn){
+  const sem = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+  let t = " " + sem(txt) + " ";
+  t = t.replace(/\bvirgula\b/g, ",").replace(/\be\s+meio\b/g, ",5").replace(/\be\s+meia\b/g, ",5");
+  for (const [w,n] of Object.entries(PAL)) t = t.replace(new RegExp("\\b"+sem(w)+"\\b","g"), " "+n+" ");
+  t = t.replace(/(\d)\s*\bponto\b\s*(\d)/g, "$1.$2").replace(/(\d)\s*,\s*(\d)/g, "$1,$2");
+  t = t.replace(/\bnao\s+fiz\b|\bnao\s+fez\b|\bpulei\b|\bpulou\b/g, " NAOFIZ ");
+  const re = /(\d)\s*[.]\s*(\d)\s*(?:=|:|-|foi|deu|nota|dificuldade|\s)*\s*(NAOFIZ|\d{1,2}(?:[.,]\d)?)/g;
+  const achados = []; let m;
+  while ((m = re.exec(t)) !== null){
+    const cod = m[1] + "." + m[2];
+    if (!item(cod)) continue;
+    if (m[3] === "NAOFIZ"){ achados.push([cod, null, true]); continue; }
+    let v = parseFloat(m[3].replace(",", "."));
+    if (v > 10 && v < 100) v = v / 10;
+    if (!(v >= 5 && v <= 10)) continue;
+    achados.push([cod, Math.round(v*10)/10, false]);
+  }
+  if (!achados.length){
+    const solo = /(?:^|\s)(\d{1,2}[.,]\d|\d{1,2})(?=\s|$)/g; const vals = [];
+    let s; while ((s = solo.exec(t)) !== null){ const v = parseFloat(s[1].replace(",", ".")); if (v>=5&&v<=10) vals.push(v); }
+    const alvo = bloco(bn).itens.filter(i=>!i.off);
+    if (vals.length && vals.length <= alvo.length)
+      vals.forEach((v,i)=> achados.push([alvo[i].cod, Math.round(v*10)/10, false]));
+  }
+  return achados;
+}
+
+function viewRelatorio(){
+  const txt = relatorio();
+  return '<div class="card"><div class="hd"><h2>Relatório da sessão</h2></div>'+
+    '<p class="lead">Copie e cole na conversa, ou salve no histórico deste aparelho e baixe o JSON quando quiser mandar tudo de uma vez.</p>'+
+    '<pre class="out" id="rel">'+esc(txt)+'</pre>'+
+    '<div class="act"><button type="button" id="cp" class="primary">Copiar</button>'+
+    '<button type="button" id="sv">Salvar no histórico</button>'+
+    '<button type="button" id="baixar">Baixar histórico</button>'+
+    '<button type="button" id="zera">Começar sessão nova</button></div>'+
+    '<p class="status" id="relSt"></p></div>';
+}
+
+function relatorio(){
+  if (S.treino == null) return "Nenhum treino aberto.";
+  const b = bloco(S.treino);
+  const linhas = [];
+  for (const it of b.itens){
+    if (it.off) continue;
+    const v = S.itens[it.cod];
+    if (!v) continue;
+    if (v.skip){ linhas.push(it.cod + "=não"); continue; }
+    if (v.nota == null) continue;
+    linhas.push(it.cod + "=" + fmt(v.nota) + (v.obs ? " (" + v.obs + ")" : ""));
+  }
+  let out = "Treino " + b.n + " (" + b.nome + ") · " + S.data + "\n" + (linhas.length ? linhas.join("  ") : "nenhuma nota registrada");
+  if (S.tcx){ const t = S.tcx;
+    out += "\n\nRelógio: " + t.min.toFixed(1) + " min · FC " + t.med + " méd · " + t.max + " máx · " + t.min_ + " mín" + (t.kcal ? " · " + t.kcal + " kcal" : "") +
+      "\nZonas: " + D.zonas.map((z,i)=> z[0]+" "+t.z[i].toFixed(1)+"%").join(" · ") +
+      "\nMetades: " + t.h1 + " / " + t.h2;
+  }
+  return out;
+}
+
+function viewPend(){
+  let h = '<div class="card"><div class="hd"><h2>Pendências</h2></div><ul class="pend">';
+  for (const [t,d,p] of D.pend) h += '<li class="'+p+'"><i></i><div class="txt"><div class="t">'+esc(t)+'</div><div class="d">'+esc(d)+'</div></div></li>';
+  h += '</ul></div>';
+  h += '<div class="card"><div class="hd"><h2>Os 5 movimentos do core</h2></div>'+
+    '<p class="lead">Treinar o core resistindo a movimento com a coluna neutra, em vez de mover a coluna sob carga. A progressão vem do tempo e da carga do Pallof, nunca da amplitude de coluna.</p>'+
+    '<table class="core"><thead><tr><th>Movimento</th><th>Trabalha</th><th>Dose</th></tr></thead><tbody>';
+  for (const [a,b2,c] of D.core) h += '<tr><td>'+esc(a)+'</td><td>'+esc(b2)+'</td><td>'+esc(c)+'</td></tr>';
+  h += '</tbody></table></div>';
+  h += '<div class="card"><div class="hd"><h2>Ajustes de execução</h2><span class="tag">23/10</span></div><ul class="pend">'+
+    '<li class="alta"><i></i><div class="txt"><div class="t">2.1 agachamento</div><div class="d">Parar antes do butt wink. Coluna neutra passa na frente de profundidade.</div></div></li>'+
+    '<li class="alta"><i></i><div class="txt"><div class="t">2.2 pressão de pernas</div><div class="d">Parar antes do quadril sair do encosto.</div></div></li>'+
+    '<li class="media"><i></i><div class="txt"><div class="t">1.3 desenvolvimento militar</div><div class="d">Sentado com encosto.</div></div></li>'+
+    '<li class="media"><i></i><div class="txt"><div class="t">4.6 remada unilateral</div><div class="d">Mão e joelho no banco, coluna paralela ao chão.</div></div></li>'+
+    '</ul></div>';
+  return h;
+}
+
+let tab = "t" + (new Date().getDay() || 7 >= 1 ? Math.min(Math.max(new Date().getDay(),1),6) : 1);
+if (S.treino) tab = "t" + S.treino;
+const TABS = D.prog.map(b => ["t"+b.n, b.n + " " + b.nome]).concat([["relogio","Relógio"],["rel","Relatório"],["pend","Pendências"]]);
+
+function render(){
+  document.getElementById("tabs").innerHTML = TABS.map(([k,l]) =>
+    '<button role="tab" data-tab="'+k+'" aria-selected="'+(k===tab)+'">'+esc(l)+'</button>').join("");
+  const v = document.getElementById("view");
+  v.innerHTML = tab === "relogio" ? viewRelogio() : tab === "rel" ? viewRelatorio() : tab === "pend" ? viewPend()
+    : viewTreino(parseInt(tab.slice(1),10));
+  if (tab === "relogio"){ document.getElementById("tcxOut").innerHTML = S.tcx ? renderTcx(S.tcx) : ""; wireTcx(); }
+  const n = bloco(S.treino);
+  document.getElementById("hdsub").textContent = n ? ("treino " + n.n + " · " + S.data) : "6 treinos · nota alvo 8";
+}
+
+function toast(msg){
+  const e = document.createElement("div"); e.className = "toast"; e.textContent = msg;
+  document.body.appendChild(e); setTimeout(()=>e.remove(), 2200);
+}
+
+let dlgCod = null, dlgVal = 8.0;
+const dlg = document.getElementById("dlg");
+const CHIPS = [7.5,7.8,8.0,8.2,8.3,8.5,8.8,9.0,9.5];
+function setVal(v){ dlgVal = Math.min(10, Math.max(5, Math.round(v*10)/10));
+  document.getElementById("dVal").textContent = fmt(dlgVal);
+  document.getElementById("dChips").querySelectorAll("button").forEach(b =>
+    b.classList.toggle("on", Math.abs(parseFloat(b.dataset.v) - dlgVal) < 0.05)); }
+function abrir(cod){
+  const it = item(cod); if (!it) return;
+  dlgCod = cod;
+  document.getElementById("dTit").textContent = it.cod + "  " + it.nome;
+  const h = it.hist || [];
+  const ult = h.length ? ("última: " + fmt(h[h.length-1][1]) + " em " + h[h.length-1][0]) : "sem histórico";
+  document.getElementById("dCtx").textContent = (it.series ? it.series + " · " : "") + (it.carga||"") + " · " + ult;
+  document.getElementById("dChips").innerHTML = CHIPS.map(v =>
+    '<button type="button" data-v="'+v+'">'+fmt(v)+'</button>').join("");
+  const v = S.itens[cod];
+  document.getElementById("dObs").value = v && v.obs ? v.obs : "";
+  setVal(v && v.nota != null ? v.nota : (h.length ? h[h.length-1][1] : 8.0));
+  dlg.showModal();
+}
+document.getElementById("dMinus").onclick = () => setVal(dlgVal - 0.1);
+document.getElementById("dPlus").onclick  = () => setVal(dlgVal + 0.1);
+document.getElementById("dChips").onclick = e => { const b = e.target.closest("button[data-v]"); if (b) setVal(parseFloat(b.dataset.v)); };
+document.getElementById("dOk").onclick = () => {
+  S.itens[dlgCod] = { nota: dlgVal, skip: false, obs: document.getElementById("dObs").value.trim() };
+  save(); dlg.close(); render(); };
+document.getElementById("dSkip").onclick = () => {
+  S.itens[dlgCod] = { nota: null, skip: true, obs: document.getElementById("dObs").value.trim() };
+  save(); dlg.close(); render(); };
+document.getElementById("dClear").onclick = () => { delete S.itens[dlgCod]; save(); dlg.close(); render(); };
+
+function wireTcx(){
+  const drop = document.getElementById("drop"), inp = document.getElementById("tcx");
+  if (!drop) return;
+  const ler = f => { if (!f) return; const r = new FileReader();
+    r.onload = () => { const t = parseTcx(r.result);
+      if (!t){ toast("Não consegui ler esse arquivo"); return; }
+      S.tcx = t; save(); document.getElementById("tcxOut").innerHTML = renderTcx(t); toast("Relógio carregado"); };
+    r.readAsText(f); };
+  drop.onclick = () => inp.click();
+  inp.onchange = e => ler(e.target.files[0]);
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add("hot"); };
+  drop.ondragleave = () => drop.classList.remove("hot");
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove("hot"); ler(e.dataTransfer.files[0]); };
+}
+
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const TEM_VOZ = !!SR && location.protocol === "https:";
+let rec = null, ouvindo = false, baseTxt = "";
+function toggleMic(){
+  const btn = document.getElementById("mic"), ta = document.getElementById("dit"), st = document.getElementById("ditSt");
+  if (!btn || !ta) return;
+  if (ouvindo){ try{ rec.stop(); }catch(e){} return; }
+  rec = new SR(); rec.lang = "pt-BR"; rec.continuous = true; rec.interimResults = true;
+  baseTxt = ta.value ? ta.value.trim() + " " : "";
+  rec.onstart = () => { ouvindo = true; btn.classList.add("on"); btn.textContent = "Parar"; st.textContent = "Ouvindo. Fale os codigos e as notas."; };
+  rec.onresult = e => {
+    let txt = "";
+    for (let i = 0; i < e.results.length; i++) txt += e.results[i][0].transcript + " ";
+    ta.value = baseTxt + txt.trim();
+  };
+  rec.onerror = e => { st.textContent = e.error === "not-allowed"
+    ? "Permissao de microfone negada. Libere nas configuracoes do site."
+    : "Erro no microfone: " + e.error + ". Use o microfone do teclado."; };
+  rec.onend = () => { ouvindo = false; btn.classList.remove("on"); btn.textContent = "Falar";
+    if (!st.textContent.startsWith("Erro") && !st.textContent.startsWith("Permissao"))
+      st.textContent = "Parou de ouvir. Confira o texto e toque em Interpretar."; };
+  try { rec.start(); } catch(e){ st.textContent = "Nao consegui iniciar o microfone."; }
+}
+
+const HIST = "tp.historico.v1";
+function lerHist(){ try { return JSON.parse(localStorage.getItem(HIST) || "[]"); } catch(e){ return []; } }
+function gravarHist(){
+  const h = lerHist();
+  const id = new Date().toISOString().slice(0,10) + "-t" + S.treino;
+  const reg = { id, data: S.data, treino: S.treino, bloco: bloco(S.treino).nome,
+                itens: JSON.parse(JSON.stringify(S.itens)), tcx: S.tcx || null,
+                texto: relatorio(), salvoEm: new Date().toISOString() };
+  const i = h.findIndex(x => x.id === id);
+  if (i >= 0) h[i] = reg; else h.push(reg);
+  try { localStorage.setItem(HIST, JSON.stringify(h.slice(-120))); return id; } catch(e){ return null; }
+}
+
+
+document.addEventListener("click", async e => {
+  const tb = e.target.closest("[data-tab]");
+  if (tb){ tab = tb.dataset.tab; render(); window.scrollTo(0,0); return; }
+  const row = e.target.closest("li.row[data-cod]");
+  if (row){ abrir(row.dataset.cod); return; }
+  if (e.target.id === "ditGo"){
+    const ta = document.getElementById("dit");
+    const achados = interpreta(ta.value, S.treino);
+    if (!achados.length){ document.getElementById("ditSt").textContent = "Não reconheci nenhum código. Tente \"" + S.treino + ".1 oito vírgula três\"."; return; }
+    for (const [cod, nota, skip] of achados)
+      S.itens[cod] = { nota, skip, obs: (S.itens[cod] && S.itens[cod].obs) || "" };
+    save(); render();
+    toast(achados.length + (achados.length > 1 ? " notas registradas" : " nota registrada"));
+    return;
+  }
+  if (e.target.id === "ditClr"){ document.getElementById("dit").value = ""; return; }
+  if (e.target.id === "cp"){
+    const txt = relatorio();
+    try { await navigator.clipboard.writeText(txt); toast("Copiado"); }
+    catch (err){ const p = document.getElementById("rel"); const r = document.createRange();
+      r.selectNodeContents(p); const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      document.getElementById("relSt").textContent = "Texto selecionado. Use copiar do seu aparelho."; }
+    return;
+  }
+  if (e.target.id === "sv"){
+    const st = document.getElementById("relSt");
+    const id = gravarHist();
+    if (id){ st.textContent = "Salvo no histórico deste aparelho como " + id + ". " + lerHist().length + " sessões guardadas."; toast("Salvo"); }
+    else st.textContent = "Não consegui salvar neste navegador. Use Copiar.";
+    return;
+  }
+  if (e.target.id === "mic"){ toggleMic(); return; }
+  if (e.target.id === "baixar"){
+    const h = lerHist();
+    if (!h.length){ toast("Histórico vazio"); return; }
+    const blob = new Blob([JSON.stringify(h, null, 2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "treino-historico-" + new Date().toISOString().slice(0,10) + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    return;
+  }
+  if (e.target.id === "zera"){
+    S = { treino: S.treino, data: hoje(), itens: {}, tcx: null }; save(); render(); toast("Sessão nova");
+    return;
+  }
+});
+document.addEventListener("keydown", e => {
+  const row = e.target.closest && e.target.closest("li.row[data-cod]");
+  if (row && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); abrir(row.dataset.cod); }
+});
+render();
+</script>
+
+</body>
+</html>

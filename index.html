@@ -186,8 +186,11 @@ const D = {"prog": [{"n": 1, "nome": "Superior A", "sub": "Peito, ombro e tríce
 const LS = "tp.rascunho.v1";
 const hoje = () => { const d=new Date(); return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0"); };
 
-let S = { treino: null, data: hoje(), itens: {}, tcx: null };
+let S = { treino: null, data: hoje(), itens: {}, tcxs: [] };
 try { const raw = localStorage.getItem(LS); if (raw) { const p = JSON.parse(raw); if (p && p.data === hoje()) S = Object.assign(S, p); } } catch (e) {}
+if (S.tcx && !Array.isArray(S.tcxs)) S.tcxs = [S.tcx];
+if (!Array.isArray(S.tcxs)) S.tcxs = [];
+delete S.tcx;
 const save = () => { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} };
 
 const cls = n => n == null ? "" : n < 8 ? "u" : n < 8.5 ? "t" : n < 9 ? "o" : "a";
@@ -243,8 +246,8 @@ function viewTreino(n){
 
 function viewRelogio(){
   let h = '<div class="card"><div class="hd"><h2>Dados do relógio</h2><span class="tag">TCX</span></div>'+
-    '<p class="lead">Carregue o arquivo .tcx da sessão. As zonas usam FCmáx '+D.fcmax+'.</p>'+
-    '<div class="drop" id="drop"><strong>Escolher arquivo .tcx</strong><br>ou arraste aqui<input type="file" id="tcx" accept=".tcx,text/xml,application/xml" style="position:absolute;opacity:0;width:0;height:0"></div>'+
+    '<p class="lead">Carregue um ou mais arquivos .tcx da sessão. Pode somar musculação e corrida no mesmo dia. As zonas usam FCmáx '+D.fcmax+'.</p>'+
+    '<div class="drop" id="drop"><strong>Escolher arquivos .tcx</strong><br>ou arraste aqui<input type="file" id="tcx" multiple accept=".tcx,text/xml,application/xml" style="position:absolute;opacity:0;width:0;height:0"></div>'+
     '<div id="tcxOut" style="margin-top:12px"></div></div>';
   return h;
 }
@@ -284,7 +287,11 @@ function parseTcx(txt){
   const mid = Math.floor(hrs.length/2);
   const avg = a => a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):0;
   let kcal = 0; for (const c of doc.getElementsByTagName("Calories")) kcal += parseInt(c.textContent,10)||0;
-  return { n:hrs.length, med:avg(hrs), max:Math.max(...hrs), min_:Math.min(...hrs),
+  const act = doc.getElementsByTagName("Activity")[0];
+  const sport = act ? (act.getAttribute("Sport")||"") : "";
+  const idEl = act ? act.getElementsByTagName("Id")[0] : null;
+  const ini = idEl ? idEl.textContent : null;
+  return { sport, ini, n:hrs.length, med:avg(hrs), max:Math.max(...hrs), min_:Math.min(...hrs),
     min:(t0&&t1)?(t1-t0)/60000:hrs.length/60, z, h1:avg(hrs.slice(0,mid)), h2:avg(hrs.slice(mid)), kcal:kcal||null };
 }
 
@@ -342,8 +349,8 @@ function relatorio(){
     linhas.push(it.cod + "=" + fmt(v.nota) + (v.obs ? " (" + v.obs + ")" : ""));
   }
   let out = "Treino " + b.n + " (" + b.nome + ") · " + S.data + "\n" + (linhas.length ? linhas.join("  ") : "nenhuma nota registrada");
-  if (S.tcx){ const t = S.tcx;
-    out += "\n\nRelógio: " + t.min.toFixed(1) + " min · FC " + t.med + " méd · " + t.max + " máx · " + t.min_ + " mín" + (t.kcal ? " · " + t.kcal + " kcal" : "") +
+  for (const t of (S.tcxs||[])){
+    out += "\n\n" + rotulo(t) + ": " + t.min.toFixed(1) + " min · FC " + t.med + " méd · " + t.max + " máx · " + t.min_ + " mín" + (t.kcal ? " · " + t.kcal + " kcal" : "") +
       "\nZonas: " + D.zonas.map((z,i)=> z[0]+" "+t.z[i].toFixed(1)+"%").join(" · ") +
       "\nMetades: " + t.h1 + " / " + t.h2;
   }
@@ -372,13 +379,28 @@ let tab = "t" + (new Date().getDay() || 7 >= 1 ? Math.min(Math.max(new Date().ge
 if (S.treino) tab = "t" + S.treino;
 const TABS = D.prog.map(b => ["t"+b.n, b.n + " " + b.nome]).concat([["relogio","Relógio"],["rel","Relatório"],["pend","Pendências"]]);
 
+const SPORTS = {Running:"Corrida", Biking:"Bike", Walking:"Caminhada", Other:"Atividade"};
+function rotulo(t){
+  const n = SPORTS[t.sport] || t.sport || "Atividade";
+  if (!t.ini) return n;
+  const d = new Date(t.ini);
+  if (isNaN(d)) return n;
+  const p2 = x => String(x).padStart(2,"0");
+  return n + " " + p2(d.getHours()) + ":" + p2(d.getMinutes());
+}
+function renderTcxs(list){
+  if (!list || !list.length) return "";
+  return list.map((t,i) =>
+    '<div class="card" style="margin-top:12px"><div class="hd"><h2>'+esc(rotulo(t))+'</h2>'+
+    '<button type="button" data-rm="'+i+'">Remover</button></div>'+renderTcx(t)+'</div>').join("");
+}
 function render(){
   document.getElementById("tabs").innerHTML = TABS.map(([k,l]) =>
     '<button role="tab" data-tab="'+k+'" aria-selected="'+(k===tab)+'">'+esc(l)+'</button>').join("");
   const v = document.getElementById("view");
   v.innerHTML = tab === "relogio" ? viewRelogio() : tab === "rel" ? viewRelatorio() : tab === "pend" ? viewPend()
     : viewTreino(parseInt(tab.slice(1),10));
-  if (tab === "relogio"){ document.getElementById("tcxOut").innerHTML = S.tcx ? renderTcx(S.tcx) : ""; wireTcx(); }
+  if (tab === "relogio"){ document.getElementById("tcxOut").innerHTML = renderTcxs(S.tcxs); wireTcx(); }
   const n = bloco(S.treino);
   document.getElementById("hdsub").textContent = n ? ("treino " + n.n + " · " + S.data) : "6 treinos · nota alvo 8";
 }
@@ -425,14 +447,18 @@ function wireTcx(){
   if (!drop) return;
   const ler = f => { if (!f) return; const r = new FileReader();
     r.onload = () => { const t = parseTcx(r.result);
-      if (!t){ toast("Não consegui ler esse arquivo"); return; }
-      S.tcx = t; save(); document.getElementById("tcxOut").innerHTML = renderTcx(t); toast("Relógio carregado"); };
+      if (!t){ toast("Não consegui ler " + f.name); return; }
+      if (S.tcxs.some(x => x.ini && t.ini && x.ini === t.ini)){ toast("Essa atividade já está carregada"); return; }
+      S.tcxs.push(t); S.tcxs.sort((a,b) => (a.ini||"").localeCompare(b.ini||""));
+      save(); document.getElementById("tcxOut").innerHTML = renderTcxs(S.tcxs);
+      toast(S.tcxs.length + (S.tcxs.length > 1 ? " atividades carregadas" : " atividade carregada")); };
     r.readAsText(f); };
+  const lerTodos = fl => { for (const f of Array.from(fl||[])) ler(f); };
   drop.onclick = () => inp.click();
-  inp.onchange = e => ler(e.target.files[0]);
+  inp.onchange = e => lerTodos(e.target.files);
   drop.ondragover = e => { e.preventDefault(); drop.classList.add("hot"); };
   drop.ondragleave = () => drop.classList.remove("hot");
-  drop.ondrop = e => { e.preventDefault(); drop.classList.remove("hot"); ler(e.dataTransfer.files[0]); };
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove("hot"); lerTodos(e.dataTransfer.files); };
 }
 
 
@@ -466,7 +492,7 @@ function gravarHist(){
   const h = lerHist();
   const id = new Date().toISOString().slice(0,10) + "-t" + S.treino;
   const reg = { id, data: S.data, treino: S.treino, bloco: bloco(S.treino).nome,
-                itens: JSON.parse(JSON.stringify(S.itens)), tcx: S.tcx || null,
+                itens: JSON.parse(JSON.stringify(S.itens)), tcx: S.tcxs || [],
                 texto: relatorio(), salvoEm: new Date().toISOString() };
   const i = h.findIndex(x => x.id === id);
   if (i >= 0) h[i] = reg; else h.push(reg);
@@ -479,6 +505,9 @@ document.addEventListener("click", async e => {
   if (tb){ tab = tb.dataset.tab; render(); window.scrollTo(0,0); return; }
   const row = e.target.closest("li.row[data-cod]");
   if (row){ abrir(row.dataset.cod); return; }
+  const rm = e.target.closest("button[data-rm]");
+  if (rm){ S.tcxs.splice(parseInt(rm.dataset.rm,10),1); save();
+    document.getElementById("tcxOut").innerHTML = renderTcxs(S.tcxs); return; }
   if (e.target.id === "ditGo"){
     const ta = document.getElementById("dit");
     const achados = interpreta(ta.value, S.treino);

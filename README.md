@@ -74,3 +74,11 @@ O botão **Baixar histórico** exporta um JSON com todas as sessões salvas.
 
 A sessão do dia é guardada automaticamente enquanto você registra; ao trocar de dia
 ela é descartada, a menos que tenha sido salva no histórico.
+
+## O que não entra aqui
+
+Este repositório é público, então ele não guarda informação clínica.
+Ficam de fora, de propósito: exames, laudos, diagnósticos e pendências
+médicas. Esses dados vivem na planilha e na conversa, que são privadas.
+O que fica aqui é o programa de treino, as cargas, as notas de
+dificuldade e a leitura do TCX do relógio.
